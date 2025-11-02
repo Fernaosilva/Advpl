@@ -1,0 +1,250 @@
+#INCLUDE "PROTHEUS.CH"
+#INCLUDE "TOPCONN.CH"
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+ฑฑษออออออออออัออออออออออหอออออออัออออออออออออออออออออหออออออัอออออออออออออปฑฑ
+ฑฑบPrograma  ณAUDIT     บAutor  ณDonizete            บ Data ณ  01/10/07   บฑฑ
+ฑฑฬออออออออออุออออออออออสอออออออฯออออออออออออออออออออสออออออฯอออออออออออออนฑฑ
+ฑฑบDesc.     ณ Programa para verificar se hแ movimentos nใo contabiliza-  บฑฑ
+ฑฑบ          ณ dos.                                                       บฑฑ
+ฑฑฬออออออออออุออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออนฑฑ
+ฑฑบUso       ณ Chamada atrav้s de menu. Versใo inicial 8.11               บฑฑ
+ฑฑบ          ณ                                                            บฑฑ
+ฑฑศออออออออออฯออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออผฑฑ
+ฑฑบ19/11/07  ณ Criado perguntas para 'data de' e 'data at้'.              บฑฑ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿
+*/
+
+User Function Audit()
+
+// Declara็ใo das Variแveis.
+Local _nOpcao		:= 0
+Local _dDataDe		:= ddatabase
+Local _dDataAte		:= ddatabase
+Local _cSep			:= ";"
+
+// Diแlogo principal
+DEFINE MSDIALOG oDlg TITLE "Auditoria de NFs" FROM 000,000 TO 200,300 PIXEL
+@ 005,005 Say "Este programa analisa se hแ NFs nใo contabilizadas. " PIXEL OF oDlg
+@ 015,005 Say "Disponํvel para Compras." PIXEL OF oDlg
+@ 035,005 Say "Data de? " PIXEL OF oDlg
+@ 035,060 MsGet _dDataDe Size 40,10 Valid !Empty(_dDataDe) PIXEL OF oDlg
+@ 050,005 Say "Data at้? " PIXEL OF oDlg
+@ 050,060 MsGet _dDataAte Size 40,10 Valid !Empty(_dDataAte).And._dDataAte>=_dDataDe PIXEL OF oDlg
+@ 065,005 Say "Separador ;,|? " PIXEL OF oDlg
+@ 065,060 MsGet _cSep Size 10,10 Valid _cSep$(";,|") PIXEL OF oDlg
+@ 085,005 Button "Ok"       Size 40,10 PIXEL OF oDlg Action(_nOpcao:=1,oDlg:End())
+@ 085,050 Button "CaNcelar" Size 40,10 PIXEL OF oDlg Action(_nOpcao:=0,oDlg:End())
+ACTIVATE MSDIALOG oDlg CENTERED
+
+// Executa op็ใo.
+If _nOpcao==1
+	Processa({|| OkProc(_dDataDe,_dDataAte,_cSep)},"Processando...")
+Else
+	Return()
+EndIf
+
+Return
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+ฑฑษออออออออออัออออออออออหอออออออัออออออออออออออออออออหออออออัอออออออออออออปฑฑ
+ฑฑบPrograma  ณOKPROC     บAutor  ณ Donizete          บ Data ณ  04/11/05   บฑฑ
+ฑฑฬออออออออออุออออออออออสอออออออฯออออออออออออออออออออสออออออฯอออออออออออออนฑฑ
+ฑฑบDesc.     ณ Rotina de processamento.                                   บฑฑ
+ฑฑฬออออออออออุออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออนฑฑ
+ฑฑบUso       ณ Chamado pelo ACATF.                                        บฑฑ
+ฑฑศออออออออออฯออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออผฑฑ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿
+*/
+
+Static Function OkProc(_dDataDe,_dDataAte,_cSep)
+
+Local _cArqTxt	:= "C:\LOGAUDIT.TXT"
+Local _cLog		:= ""
+Local _lIncons	:= .F.
+Local nReg 		:= 0
+Local _lCabec	:= .f.
+
+Private _cArq
+Private _lLog		:= .F.
+
+// Checa se arquivo de LOG jแ existe.
+If File(_cArqTxt)
+	If !MsgYesNo("Arquivo de LOG jแ existe. Sobrepor?","AUDIT")
+		Return
+	EndIf
+EndIf
+
+// Cria arquivo de LOG.
+_cArq := fCreate(_cArqTxt,0)
+
+// Ativa area de trabalho e define regua.
+cQuery := " SELECT D1_FILIAL, D1_DTDIGIT, D1_DOC, D1_SERIE, D1_FORNECE, D1_LOJA, D1_TES, F4_ESTOQUE,"+;
+" F4_FINALID, SD1.R_E_C_N_O_ SD1REC, F1_DTLANC, SF1.R_E_C_N_O_ SF1REC FROM "+RetSqlName("SD1")+" SD1"
+cQuery += " INNER JOIN "+RetSqlName("SF4")+" SF4 ON"
+cQuery += " SD1.D1_FILIAL=SF4.F4_FILIAL AND"
+cQuery += " SD1.D1_TES=SF4.F4_CODIGO"
+cQuery += " INNER JOIN "+RetSqlName("SF1")+" SF1 ON"
+cQuery += " SD1.D1_FILIAL=SF1.F1_FILIAL AND
+cQuery += " SD1.D1_DOC=SF1.F1_DOC AND
+cQuery += " SD1.D1_SERIE=SF1.F1_SERIE AND
+cQuery += " SD1.D1_FORNECE=SF1.F1_FORNECE AND
+cQuery += " SD1.D1_LOJA=SF1.F1_LOJA
+cQuery += " WHERE
+cQuery += " (SD1.D1_FILIAL>='01' AND SD1.D1_FILIAL<='ZZ') AND
+cQuery += " (SD1.D1_DTDIGIT>='"+dtos(_dDatade)+"' AND SD1.D1_DTDIGIT<='"+dtos(_dDataAte)+"') AND
+//cQuery += " SF4.F4_ESTOQUE='S' AND
+cQuery += " SD1.D_E_L_E_T_=' ' AND
+cQuery += " SF1.D_E_L_E_T_=' ' AND
+cQuery += " SF4.D_E_L_E_T_=' '
+cQuery += " GROUP BY D1_FILIAL, D1_DTDIGIT, D1_DOC, D1_SERIE, D1_FORNECE, D1_LOJA, D1_TES, F4_ESTOQUE, F4_FINALID,"+;
+" SD1.R_E_C_N_O_, F1_DTLANC, SF1.R_E_C_N_O_"
+cQuery += " ORDER BY D1_FILIAL, D1_DTDIGIT, D1_DOC, D1_SERIE, D1_FORNECE, D1_LOJA, D1_TES, F4_ESTOQUE, F4_FINALID,"+;
+" SD1.R_E_C_N_O_, F1_DTLANC, SF1.R_E_C_N_O_"
+
+TcQuery cQuery Alias TSD1 New
+
+TSD1->(dbGoTop())
+While !(TSD1->(EOF()))
+	nReg++
+	TSD1->(dbSkip())
+Enddo
+ProcRegua(nReg)
+
+TSD1->(dbGoTop())
+
+While !(TSD1->(EOF()))
+	
+	IncProc("Registro: " + Str(TSD1->SD1REC))
+	
+	cQuery := " SELECT * FROM "+RetSqlName("CV3")
+	cQuery += " WHERE"
+	cQuery += " CV3_TABORI='SF1' AND"
+	cQuery += " CV3_RECORI='"+Alltrim(Str(TSD1->SF1REC))+"' AND"
+	cQuery += " CV3_DC<>'4' AND"
+	cQuery += " D_E_L_E_T_=' '"
+	
+	TcQuery cQuery Alias TCV3 New
+	
+	//TcSetField("TCV3", CV3_DTSEQ, "D", 08, 0)
+	
+	TCV3->(dbGoTop())
+	
+	If !_lCabec
+		_lCabec := .t.
+		
+		_cLog := "Filial"+_cSep+;
+		"Num.NF"+_cSep+;
+		"Serie"+_cSep+;
+		"Cod.Forn."+_cSep+;
+		"Loja"+_cSep+;
+		"Dt.Digit"+_cSep+;
+		"Desc.Tes"+_cSep+;
+		"Ocorr."+_cSep
+		
+		CriaLog(_cLog)
+		
+	EndIf
+	
+	_cLog := TSD1->D1_FILIAL+_cSep+;
+	TSD1->D1_DOC+_cSep+;
+	TSD1->D1_SERIE+_cSep+;
+	TSD1->D1_FORNECE+_cSep+;
+	TSD1->D1_LOJA+_cSep+;
+	TSD1->D1_DTDIGIT+_cSep+;
+	TSD1->F4_FINALID+_cSep
+	
+	If !(TCV3->(EOF()))
+		// Procurar no CT2
+		dbSelectarea("CT2")
+		Go(Val(TCV3->CV3_RECDES))
+		
+		_lIncons:= .f.
+		
+		If CT2->(Deleted())
+			_cLog += "#Registro deletado do CT2"
+			_lIncons:= .t.
+		Else
+			If Alltrim(TCV3->CV3_DTSEQ)<>dtos(CT2->CT2_DATA)
+				_cLog 	+= "#Data "
+				_lIncons:= .t.
+			EndIf
+			If TCV3->CV3_DC<>CT2->CT2_DC
+				_cLog 	+= "#Tp Lan "
+				_lIncons:= .t.
+			EndIf
+			If TCV3->CV3_DEBITO<>CT2->CT2_DEBITO
+				_cLog 	+= "#Deb "
+				_lIncons:= .t.
+			EndIf
+			If TCV3->CV3_CREDIT<>CT2->CT2_CREDIT
+				_cLog 	+= "#Cre "
+				_lIncons:= .t.
+			EndIf
+			
+			/*
+			If TCV3->CV3_VLR01<>CT2->CT2_VALOR
+			_cLog 	+= "#Valor "
+			_lIncons:= .t.
+			EndIf
+			*/
+			
+			If TCV3->CV3_HIST<>CT2->CT2_HIST
+				_cLog 	+= "#Hist "
+				_lIncons:= .t.
+			EndIf
+		EndIf
+		If _lIncons
+			CriaLog(_cLog)
+		EndIf
+		
+	Else
+		// Nใo encontrado no CV3.
+		_cLog += "#Nao encontrou no CV3"
+		CriaLog(_cLog)
+	EndIf
+	TCV3->(dbCloseArea())
+	
+	dbSelectArea("TSD1")
+	dbSkip()
+EndDo
+
+TSD1->(dbCloseArea())
+fClose(_cArq)
+
+// Avisa que tem ocorr๊ncias.
+If _lLog
+	MsgStop("Auditoria Efetuada. Hแ ocorr๊ncias no arquivo de LOG -> "+_cArqTxt)
+Else
+	MsgStop("Auditoria Efetuada.")
+EndIf
+
+Return
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+ฑฑษออออออออออัออออออออออหอออออออัออออออออออออออออออออหออออออัอออออออออออออปฑฑ
+ฑฑบFuno    ณ CriaLog  บ Autor ณ Donizete           บ Data ณ  23/09/04   บฑฑ
+ฑฑฬออออออออออุออออออออออสอออออออฯออออออออออออออออออออสออออออฯอออออออออออออนฑฑ
+ฑฑบDescrio ณ Funcao que cria o log de divergencias.                     บฑฑ
+ฑฑบ          ณ (Adaptado do modelo feito pela Adriana Buscarini.          บฑฑ
+ฑฑฬออออออออออุออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออนฑฑ
+ฑฑบUso       ณ Programa principal                                         บฑฑ
+ฑฑศออออออออออฯออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออผฑฑ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿
+/*/
+
+Static Function CriaLog(_cTexto_do_Log)
+
+fWrite(_cArq,_cTexto_do_Log + Chr(13) + Chr(10))
+_lLog := .T.
+
+Return

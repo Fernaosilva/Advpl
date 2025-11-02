@@ -1,0 +1,28 @@
+#INCLUDE "PROTHEUS.CH"
+
+User Function AjusteSE2()
+
+dbSelectArea("SE2")
+dbSetOrder(1)
+
+While !Eof()
+	If Empty(SE2->E2_CCD)
+		dbSelectArea("SED")
+		dbSetOrder(1)
+		If dbSeek(xFilial("SED")+SE2->E2_NATUREZ)
+			If SED->ED_ZZCTB<>"N" .And. SED->ED_ZZCCOBR=="S"
+				If Left(SED->ED_ZZCTAD,2)=="43"
+					dbSelectArea("SE2")
+					If Reclock("SE2",.F.)
+						SE2->E2_CCD := "199"
+						msunlock()
+					EndIf					
+				EndIf
+			Endif
+		EndIf
+	EndIf
+	dbSelectArea("SE2")
+	dbSkip()
+EndDo
+
+Return

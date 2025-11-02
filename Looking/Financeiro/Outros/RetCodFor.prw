@@ -1,0 +1,40 @@
+#INCLUDE "PROTHEUS.CH"
+#INCLUDE "TOPCONN.CH"
+
+User Function RetCodFor
+
+// Variáveis da função.
+Local _nCod := 0 
+Local _xArea:= GetArea()
+Public _cCod := ""
+
+// Verifica se já existe código com o tipo de fornecedor escolhido.
+cQuery := "SELECT COUNT(A2_COD) AS OCORR FROM " + RetSqlName("SA2")
+cQuery += " WHERE A2_ZZTP='"+M->A2_ZZTP+"' AND"
+cQuery += " D_E_L_E_T_=' '"
+TcQuery cQuery New Alias "TSA2"
+TSA2->(dbGoTop())
+
+If TSA2->OCORR == 0 // Retorna 1 para o caso primeiro caso com a letra.
+	_cCod := 0
+	TSA2->(dbCloseArea())
+Else // Foi encontrado, então retorna o próximo número a ser usado.
+	TSA2->(dbCloseArea())
+	cQuery := "SELECT MAX(A2_COD) AS MAIOR FROM " + RetSqlName("SA2")
+	cQuery += " WHERE A2_ZZTP='"+M->A2_ZZTP+"' AND"
+	cQuery += " D_E_L_E_T_=' '"
+	TcQuery cQuery New Alias "TSA2"
+	TSA2->(dbGoTop())
+	_nCod := Val(SubStr(TSA2->MAIOR,2,5))
+	TSA2->(dbCloseArea())
+EndIf
+
+// Monta o próximo código.
+_cCod := M->A2_ZZTP + StrZero(_nCod+1,5)
+M->A2_COD := _cCod
+
+// Restaura área
+RestArea(_xArea)
+
+// Fim do programa.
+Return(_cCod)

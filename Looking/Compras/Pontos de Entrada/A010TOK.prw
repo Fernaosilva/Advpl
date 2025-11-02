@@ -1,0 +1,61 @@
+#Include "RWMAKE.CH"
+
+/*ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºPrograma  ³A010TOK   ºAutor  ³Donizete            º Data ³  05/03/07   º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDesc.     ³ Este programa válida se a NCM e alíquota de IPI foram      º±±
+±±º          ³ informados quando o produto cadastrado possui os tipos     º±±
+±±º          ³ PI,PA,MI,RI,RN.                                            º±±
+±±º          ³ (Adaptado para Looking)                                    º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³ Ponto de Entrada disparado no Ok do Cad.Produtos.         º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß*/
+
+User Function A010TOK()
+
+// Variáveis do programa.
+Local _lRet := .t.
+
+// Verifica tipo de produto e faz a validação com a NCM / IPI.
+If M->B1_TIPO $ "CO,MC,MP,PP,PA"
+	
+	If Empty(M->B1_POSIPI)
+		_lRet := MsgBox("Atenção, produto não pode ficar com campo Pos.IPI/NCM em branco (pasta Impostos)! Confirma?","Aviso !!!","YESNO")
+	Else
+		If M->B1_IPI == 0
+			_lRet := MsgBox("Alíquota de IPI zerada. Confirma?","Aviso !!!","YESNO")
+		EndIf
+	Endif
+	
+// Conta deve ser preenchida para CI.
+ElseIf M->B1_TIPO == "CI" .And. Empty(M->B1_CONTA)
+	Alert("Atenção, tipo de produto Compra de Imobilizado (CI), campo 'Cta Contabil' não pode ficar em branco.!")
+	_lRet := .f.
+
+// CI só aceita conta iniciada por 13.
+ElseIf M->B1_TIPO == "CI" .And. !SubStr(M->B1_CONTA,1,2) $ "13"
+	Alert("Campo 'Cta.Contábil' aceita somente contas iniciadas por '13' para produto 'CI'.")
+	_lRet := .f.
+
+// MC e GG devem ter conta.
+ElseIf M->B1_TIPO $ "MC,GG,BP" .And. (Empty(M->B1_ZZCTAD) .Or. Empty(M->B1_ZZCTAC))
+	Alert("Atenção!!! Campo(s) 'Cta.Desp.' ou 'Cta.Custo' em branco " + ;
+		  "no cadastro do produto. Corrija para prosseguir.")
+	_lRet := .f.
+
+// Valida se conta correta para compras -> despesa.
+ElseIf !Empty(M->B1_ZZCTAD) .And. !SubStr(M->B1_ZZCTAD,1,2) $ "43"
+	Alert("Campo 'Cta.Desp.' aceita somente contas iniciadas por '43'")
+	_lRet := .f.
+
+// Valida se conta correta para compras -> custo.
+ElseIf !Empty(M->B1_ZZCTAC) .And. !SubStr(M->B1_ZZCTAC,1,2) $ "42"
+	Alert("Campo 'Cta.Custo' aceita somente contas iniciadas por '42'.")
+	_lRet := .f.
+EndIf
+
+Return(_lRet)

@@ -1,0 +1,130 @@
+#INCLUDE "RWMAKE.CH"
+#INCLUDE "TOPCONN.CH"
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºPrograma  ³MT100LOK  ºAutor  ³José Donizete R.S.  º Data ³  23/06/06   º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDesc.     ³ Ponto de entrada para verificar se a TES movimenta financeiº±±
+±±º          ³ro e nao movimenta estoque. Caso essa condicao seja verdadeiº±±
+±±º          ³ra a Centro de Custo não pode ser em branco.                º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³ SIGACOM - MATA100 ( Movimentos de Entrada )                º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+USER FUNCTION MT100LOK()
+Local aArea    := GetArea()
+Local aAreaSD1 := SD1->(GetArea())
+Local aAreaSF4 := SF4->(GetArea())
+Local aAreaSB1 := SB1->(GetArea())
+Local lRet     := .T.
+Local nPosTES  := GDFieldPos("D1_TES")
+Local nPosCC   := GDFieldPos("D1_CC")
+Local nPosRat  := GDFieldPos("D1_RATEIO")
+Local nPosITC  := GDFieldPos("D1_ITEMCTA")
+Local nPosProd := GDFieldPos("D1_COD")
+Local nPosOP   := GDFieldPos("D1_OP")
+Local nPosST   := GDFieldPos("D1_CLASFIS")
+Local lDel     := (aCols[ n , Len(aCols[n]) ])
+
+/*If nPosITC != 0 .AND. !(aCols[ n , Len(aCols[n]) ])
+If M->cTipo == "D" .AND. EMPTY(aCols[ n , nPosITC ])
+Alert("Atenção!!! Preenchimento do Centro de Receita é obrigatório.")
+lRet := .F.
+Endif
+Endif
+*/
+If !lDel .AND. M->cTipo != "D"
+	cQuery := "SELECT F4_DUPLIC, F4_ESTOQUE , F4_ZZCCOBR, F4_ZZTM FROM "+ RetSQLName("SF4") +" WHERE"
+	cQuery += " F4_FILIAL ='"+ xFILIAL("SF4") +"' AND F4_CODIGO ='"+ aCols[ n , nPosTES ] +"'"
+	cQuery += " AND D_E_L_E_T_ = ' '"
+	TcQuery cQuery Alias TSF4 New
+	TSF4->(dbGoTop())
+	
+	// Posiciona no cadastro de produtos para efetuar outras validações.
+	dbSelectArea("SB1")
+	dbSetOrder(1)
+	dbSeek(xFilial("SB1")+aCols[ n , nPosProd ])
+	
+	//Verifica se o produto possui conta.
+	// Será implementado posteriormente.
+	/*
+	If TSF4->F4_ZZCCOBR == "S" .And. Empty(SB1->B1_ZZCTAD) .And. Empty(SB1->B1_ZZCTAC)
+		Alert("Atenção!!! Compra para Despesa ou Custo e o produto esta sem conta contábil nos campos " + ;
+		      "'Cta.Despesa' ou 'Cta.Custo'")
+		lRet := .F. 
+	EndIf
+	*/
+	
+	// Verifica se o centro de custo é obrigatório. Ok
+	If TSF4->F4_ZZCCOBR == "S" .AND. EMPTY(aCols[ n , nPosCC ]).AND. !lDel .AND. aCols[ n , nPosRat ] <> "1" .And.;
+		SB1->B1_TIPO <> "CI"
+		Alert("Atenção!!! Preenchimento do Centro de Custo é obrigatório.")
+		lRet := .F.
+	Endif
+	
+	// Verifica se digitou CTR na espécie de documento nas notas de frete. Ok
+	If Alltrim(TSF4->F4_ZZTM) == "04" .AND. lRet .AND. Alltrim(CESPECIE) <> "CTR"
+		Alert("Atenção!!! Pra frete a Espécie de Documento deve ser CTR.")
+		lRet := .F.
+	Endif
+	
+	// Se for serviço de beneficiamento e o TES atualizar estoque, ver se a OP foi informada. Ok
+	If Alltrim(TSF4->F4_ZZTM) == "08" .AND. lRet .AND. EMPTY(aCols[ n , nPosOP ]) .And. TSF4->F4_ESTOQUE=="S"
+		Alert("Atenção!!! Para serviço de beneficiamento, informar o número da OP.")
+		lRet := .F.
+	Endif
+	
+	// Verifica se o número da NF possui 6 dígitos. Ok
+	If  Len(Alltrim(CNFiscal)) < 6 .AND. lRet
+		Alert("Atenção!!! Numero de Documento menor que 6 caracteres.")
+		lRet := .F.
+	Endif
+	
+	// Verifica se a situação tributária foi montada corretamente. Ok
+	If  Len(Alltrim(aCols[ n , nPosST ]))<3 .AND. lRet
+		Alert("Atenção!!! Classificação fiscal inválida, verifique os cadastro TES e PRODUTO.")
+		lRet := .F.
+	Endif
+	
+	// Não permite usar TES que atualiza estoques para alguns tipos de produtos. Ok
+	If SB1->B1_TIPO $ "GG/SV/CI/MO" .AND. TSF4->F4_ESTOQUE == "S" .And. lRet
+		Alert("Produtos do tipo GG/SV/CI/MO não devem atualizar estoque.")
+		lRet := .F.
+	Endif
+	
+	// Não permite compra de Materia Prima / Outros com TES que não atualiza estoque.
+	If SB1->B1_TIPO $ "MP,CO,PP" .AND. TSF4->F4_ESTOQUE == "N" .AND. !Alltrim(TSF4->F4_ZZTM) $ "24" .And. lRet
+		Alert("Para produtos tipo 'MP/CO/PP' o TES deve atualizar estoques.")
+		lRet := .F.
+	Endif
+	
+	// Não permite compra de Ativo com TES de consumo / outros.
+	If SB1->B1_TIPO $ "CI" .AND. Alltrim(TSF4->F4_ZZTM) <> "05" .And. lRet
+		Alert("TES incorreta, para compra de Ativo usar o TES apropriado.")
+		lRet := .F.
+	Endif
+
+	// Não permite compra de Ativo com tipo de produto que não seja imobilizado.
+	If SB1->B1_TIPO <> "CI" .AND. Alltrim(TSF4->F4_ZZTM) == "05" .And. lRet
+		Alert("Tipo de produto incorreto para compra de ativo. Válido somente CI.")
+		lRet := .F.
+	Endif
+	
+	RestArea(aAreaSB1)
+	
+	// Fecha área de trabalho.
+	TSF4->(dbCloseArea())
+Endif
+
+// Restaura área de trabalho.
+RestArea(aAreaSF4)
+RestArea(aAreaSD1)
+RestArea(aArea)
+
+// Fim do programa.
+RETURN lRet

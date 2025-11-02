@@ -1,0 +1,114 @@
+#INCLUDE "rwmake.ch"
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºPrograma  ³M020INC  º Autor ³ J.DONIZETE R.SILVA º Data ³  29/01/04    º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDescricao ³ Ponto de Entrada p/ para geracao automatica da Conta Conta-º±±
+±±º          ³ bil do Fornecedor conforme inclusao do mesmo.              º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³ Cadastro de Fornecedores                                   º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±ºAlterações³ 23/12/2006 Donizete/Microsiga.                             º±±
+±±º          ³ Adaptado do modelo desenvolvido pelo Vitor L.Fattori       º±±
+±±º30/05/2007³ Donizete - Microsiga - Implantado na Looking por Donizete. º±±
+±±º          ³                                                            º±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+User Function M020INC()
+
+// Declaração das Variáveis.
+Local _xAreaSA2		:= {}
+Local _xAreaCT1		:= {}
+Local _cNome		:= ""
+Local _cCod			:= ""
+Local _cEst			:= ""
+Local _cConta		:= ""
+Local _aIncCad  	:= {}
+Local _lCriar		:= .F.
+Private lMsErroAuto := .F.
+Private lMsHelpAuto := .T.
+
+// Processa somente se o módulo for SIGACTB e a opção for de Inclusão.
+If INCLUI .and. Upper(Alltrim(GetMv("MV_MCONTAB"))) == "CTB" .And. Empty(SA2->A2_CONTA)
+	
+	dbSelectArea("SA2")
+	_xAreaSA2 := GetArea()
+	
+	// Memoriza dados.
+	_cNome		:= SA2->A2_NOME
+	_cCod		:= SA2->A2_COD+SA2->A2_LOJA
+	_cEst		:= SA2->A2_EST
+	_cConta  	:= ""
+	
+	Do case
+		Case SubStr(_cCod,1,1)$ "0".And.SA2->A2_EST<>"EX" // Fornecedores Nacionais
+			_cConta:="21010101"  + _cCod
+			_lCriar:= .t.
+		Case SubStr(_cCod,1,1)=="0".And.SA2->A2_EST=="EX" // Fornecedores Estrangeiros
+			_cConta:="21010102"  + _cCod
+			_lCriar:= .t.
+		Case SubStr(_cCod,1,1)=="F" // Funcionários
+			_cConta:="21010509"
+		Case SubStr(_cCod,1,1)=="O" // Outras Contas a Pagar
+			_cConta:="21010509"
+		Case SubStr(_cCod,1,1)=="V" // Vendedores
+			_cConta:="21010504"
+		OtherWise // Não cria a conta.
+			Return
+	EndCase
+	
+	If _lCriar
+		dbSelectArea("CT1")
+		_xAreaCT1 := GetArea()
+		dbSetOrder(1)
+		DbSeek(xFilial("CT1") + _cConta + _cCod)
+		If .not. Found()
+			
+			// Alimenta matriz com os dados do registro a ser criado.
+			aAdd( _aIncCad , { "CT1_FILIAL"  , XFILIAL("CT1") , Nil } )
+			aAdd( _aIncCad , { "CT1_CONTA "  , _cConta        , Nil } )
+			aAdd( _aIncCad , { "CT1_DESC01"  , _cNome         , Nil } )
+			aAdd( _aIncCad , { "CT1_CLASSE"  , "2"            , Nil } )
+			aAdd( _aIncCad , { "CT1_NORMAL"  , "2"            , Nil } )
+			aAdd( _aIncCad , { "CT1_RES"     , _cCod          , Nil } )
+			//aAdd( _aIncCad , { "CT1_CTASUP"  , _cConta        , Nil } )
+			aAdd( _aIncCad , { "CT1_ACITEM"  , "2"            , Nil } )
+			aAdd( _aIncCad , { "CT1_ACCUST"  , "2"            , Nil } )
+			aAdd( _aIncCad , { "CT1_ACCLVL"  , "2"            , Nil } )
+			aAdd( _aIncCad , { "CT1_CCOBRG"  , "2"            , Nil } )
+			aAdd( _aIncCad , { "CT1_ITOBRG"  , "2"            , Nil } )
+			aAdd( _aIncCad , { "CT1_CLOBRG"  , "2"            , Nil } )
+			aAdd( _aIncCad , { "CT1_CTAVM "  , ""             , Nil } )
+			aAdd( _aIncCad , { "CT1_BOOK  "  , "001/002/003/004/005"           , Nil } )
+			
+			// Inclui o registro no cadastro.
+			CTBA020( _aIncCad , , 3)
+			If lMsErroAuto
+				MostraErro()
+				Alert("Não foi possível incluir registro.")
+			EndIf
+			
+			// Restaura áreas de trabalho.
+			DbSelectArea("CT1")
+			RestArea(_xAreaCT1)
+			
+		EndIf
+	EndIf
+	
+	// Atualiza a conta no cadastro do Fornecedor
+	DbSelectArea("SA2")
+	If Reclock("SA2", .F.)
+		REPLACE SA2->A2_CONTA	with _cConta
+		MsUnlock()
+	EndIf
+EndIf
+
+// Restaura áreas de trabalho.
+DbSelectArea("SA2")
+RestArea(_xAreaSA2)
+
+Return
