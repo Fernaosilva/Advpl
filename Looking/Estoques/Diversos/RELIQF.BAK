@@ -1,0 +1,210 @@
+#INCLUDE "rwmake.ch"
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºPrograma  ³RELIQF     º Autor ³ F.SILVA            º Data ³  22/10/08  º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDescricao ³ CODIGO GERADO PELO IDE PARA FECHAMENTO DOS                  ±±
+±±º          ³ REGISTROS DE I.Q.F.                                        º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³ ESTOUQE / CUSTOS                                           º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+
+User Function reliqf()
+
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Declaracao de Variaveis                                             ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+Local cDesc1         := "Este programa tem como objetivo imprimir relatorio "
+Local cDesc2         := "de acordo com os parametros informados pelo usuario."
+Local cDesc3         := "Fechamento de I.Q.F"
+Local cPict          := ""
+Local titulo       := "Fechamento de I.Q.F"
+Local nLin         := 80
+
+Local Cabec1       := "                                        Pontos de    Pontos de  Pontos de 
+
+"
+Local Cabec2       := "Cod.Forn Nome Fornecedor                Pontualidade Quantidade Qualidade I.Q.F"
+Local imprime      := .T.
+Local aOrd := {}
+Private lEnd         := .F.
+Private lAbortPrint  := .F.
+Private CbTxt        := ""
+Private limite           := 80
+Private tamanho          := "P"
+Private nomeprog         := "Fech.I.Q.F" // Coloque aqui o nome do programa para impressao no cabecalho
+Private nTipo            := 18
+Private aReturn          := { "Zebrado", 1, "Administracao", 2, 2, 1, "", 1}
+Private nLastKey        := 0
+Private cPerg       := "ZZSZ4     "
+Private cbtxt      := Space(10)
+Private cbcont     := 00
+Private CONTFL     := 01
+Private m_pag      := 01
+Private wnrel      := "Fech.I.Q.F" // Coloque aqui o nome do arquivo usado para impressao em disco
+
+Private cString := "SZ4"
+
+dbSelectArea("SZ4")
+dbSetOrder(1)
+
+
+pergunte(cPerg,.T.)
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Monta a interface padrao com o usuario...                           ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+wnrel := SetPrint(cString,NomeProg,cPerg,@titulo,cDesc1,cDesc2,cDesc3,.T.,aOrd,.T.,Tamanho,,.T.)
+
+If nLastKey == 27
+	Return
+Endif
+
+SetDefault(aReturn,cString)
+
+If nLastKey == 27
+   Return
+Endif
+
+nTipo := If(aReturn[4]==1,15,18)
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Processamento. RPTSTATUS monta janela com a regua de processamento. ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+RptStatus({|| RunReport(Cabec1,Cabec2,Titulo,nLin) },Titulo)
+Return
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºFun‡„o    ³RUNREPORT º Autor ³ AP6 IDE            º Data ³  22/10/08   º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDescri‡„o ³ Funcao auxiliar chamada pela RPTSTATUS. A funcao RPTSTATUS º±±
+±±º          ³ monta a janela com a regua de processamento.               º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³ Programa principal                                         º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+
+Static Function RunReport(Cabec1,Cabec2,Titulo,nLin)
+
+Local nOrdem
+Local cForne:=	""	// variavel para guardar o codigo do fornecedor
+Local cNome :=	""	// Variavel para guardar o nome do fornecedor
+Local nCont :=	0	// variavel do contador
+Local nPont :=	0	// Variavel do acumuldaor dos pontos de pontualidade
+Local nQuant :=	0	// Variavel do acumuldaor dos pontos de	quantidade
+Local nQuali :=	0	// Variavel do acumuldaor dos pontos de qualidade
+Local nMedia :=	0	// Variavel para calcular a media do I.Q.F final do periodo
+Local cDtIni := DtoS(mv_par01)
+Local cDtFin := DtoS(mv_par02)
+Local cData:= ""
+
+dbSelectArea(cString)
+dbSetOrder(2)
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ SETREGUA -> Indica quantos registros serao processados para a regua ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+SetRegua(RecCount())
+
+
+dbGoTop()
+Do While !EOF()
+
+   //ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+   //³ Verifica o cancelamento pelo usuario...                             ³
+   //ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+   If lAbortPrint
+      @nLin,00 PSAY "*** CANCELADO PELO OPERADOR ***"
+      Exit
+   Endif
+
+   //ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+   //³ Impressao do cabecalho do relatorio. . .                            ³
+   //ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+   If nLin > 55 // Salto de Página. Neste caso o formulario tem 55 linhas...
+      Cabec(Titulo,Cabec1,Cabec2,NomeProg,Tamanho,nTipo)
+      nLin := 9
+   Endif
+   cForne:=Z4_FORNEC
+   cNome:= Alltrim(Z4_DESCFOR)
+   
+  Do while cForne == Z4_FORNEC
+  	        cData:= DtoS(Z4_DATA)
+  	          		    
+  		   If (cData>=cDtIni .and. cData<=cDtFin) 
+  		    nPont := nPont + Z4_PPONT
+  			nQuant:= nQuant + Z4_PQUANT
+  			nQuali:= nQuali + Z4_PQUALID
+  			nCont := nCont + 1
+  		
+  			endIf
+
+  			Dbskip()
+  		
+	EndDo
+  		
+    nMedia:= ((nPont/nCont)+(nQuant/nCont)+(nQuali/nCont)) // Calculo da Media do I.Q.F final do periodo para o fornecedor.
+   
+    @nLin,00 PSAY 	cForne 			PICTURE 	"@E 999999"
+    @nLin,10 PSAY 	cNome	 		PICTURE 	"@!"
+    @nLin,41 PSAY 	(nPont/nCont) 	PICTURE 	"@ER 99.99"
+    @nLin,54 PSAY 	(nQuant/nCont) 	PICTURE 	"@ER 99.99"
+    @nLin,65 PSAY 	(nQuali/nCont) 	PICTURE 	"@ER 99.99"
+    @nLin,75 PSAY 	nMedia 			PICTURE 	"@ER 99.99"
+    
+    //Zera vaiaveis para o proximo Fornecedor
+    nCont:=		0
+    nPont:=		0	
+	nQuant:=	0	
+	nQuali:=	0	
+	nMedia:=	0
+	
+   nLin := nLin + 1 // Avanca a linha de impressao
+
+   //dbSkip() // Avanca o ponteiro do registro no arquivo
+EndDo
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Finaliza a execucao do relatorio...                                 ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+SET DEVICE TO SCREEN
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Se impressao em disco, chama o gerenciador de impressao...          ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+If aReturn[5]==1
+   dbCommitAll()
+   SET PRINTER TO
+   OurSpool(wnrel)
+Endif
+
+MS_FLUSH()
+
+Return
+/*
+         1         2         3         4         5         6         7         8
+12345678901234567890123456789012345678901234567890123456789012345678901234567890
+                                        Pontos de    Pontos de  Pontos de Media
+Cod.Forn Nome Fornecedor                Pontualidade Quantidade Qualidade I.Q.F
+
+

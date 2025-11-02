@@ -1,0 +1,210 @@
+#Include "RWMAKE.CH"
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+ฑฑษออออออออออัออออออออออหอออออออัออออออออออออออออออออหออออออัอออออออออออออปฑฑ
+ฑฑบPrograma  ณF100TOK   บAutor  ณDonizete            บ Data ณ  23/12/05   บฑฑ
+ฑฑฬออออออออออุออออออออออสอออออออฯออออออออออออออออออออสออออออฯอออออออออออออนฑฑ
+ฑฑบDesc.     ณ Este programa tem a fun็ใo de validar conta, centro de     บฑฑ
+ฑฑบ          ณ custo, item contแbil e classe de valor. Checa se as contas บฑฑ
+ฑฑบ          ณ foram informadas e se a amarra็ใo esta ok. Estando ok, a   บฑฑ
+ฑฑบ          ณ conta contแbil serแ retornada para o tํtulo e o mesmo pode-บฑฑ
+ฑฑบ          ณ rแ ser incluํdo, caso contrแrio, serแ apresentada msg. ao  บฑฑ
+ฑฑบ          ณ usuแrio e o tํtulo nใo serแ incluํdo at้ que seja feita a  บฑฑ
+ฑฑบ          ณ corre็ใo.                                                  บฑฑ
+ฑฑบ          ณ                                                            บฑฑ
+ฑฑบ          ณ Desenvolvido na versใo 8.11                                บฑฑ
+ฑฑบ          ณ                                                            บฑฑ
+ฑฑฬออออออออออุออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออนฑฑ
+ฑฑบUso       ณ Ponto de Entrada disparado na inclusใo de mov.bancario.    บฑฑ
+ฑฑศออออออออออฯออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออผฑฑ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿
+*/
+
+User Function F100TOK
+
+// Declara็ใo das Variแveis.
+Public 	_cNat 	 		:= M->E5_NATUREZ
+Public   _cConta		:= If(cRecPag=="P",M->E5_DEBITO,M->E5_CREDITO)
+Public	_cCC			:= If(cRecPag=="P",M->E5_CCD,M->E5_CCC)
+Public	_cItem			:= If(cRecPag=="P",M->E5_ITEMD,M->E5_ITEMC)
+Public	_cClasse		:= If(cRecPag=="P",M->E5_CLVLDB,M->E5_CLVLCR)
+Public 	_xAreaSED		:= {}
+Public 	_xAreaCT1		:= {}
+Public	_lRet			:= .T.
+Public  _cRegraCC		:= alltrim(u_cc(_cCC))
+
+// Posiciona no cadastro de naturezas para obter a conta.
+dbSelectArea("SED")
+_xAreaSED := GetArea()
+dbSetOrder(1)
+dbSeek(xFilial("SED") + _cNat)
+
+// Nใo faz valida็ใo caso a natureza nใo esteja parametrizada para ser contabilizada.
+If SED->ED_ZZCTB == "N"
+	RestArea(_xAreaSED)
+	Return(.T.)
+EndIf
+
+If SED->ED_ZZCCOBR=="S"
+	If cRecPag=="P" .And. Empty(M->E5_CCD)
+		Alert("ษ obrigat๓rio a digita็ใo do centro de custo d้bito!")
+		Return(.f.)
+	ElseIf cRecPag=="R" .And. Empty(M->E5_CCC)
+		Alert("ษ obrigat๓rio a digita็ใo do centro de custo cr้dito!")
+		Return(.f.)
+	EndIf
+EndIf
+
+If SED->ED_ZZCTB$"C,F"
+	Alert("O uso desta natureza geralmente acompanha uma NF, a digita็ใo da mesma deve ser pelo m๓dulo " + ;
+	      "de Compras ou Faturamento para o correto processamento do sistema.")
+EndIf
+
+// Nใo executa demais valida็๕es pois o m๓dulo de contabilidade serแ implantado na fase 2.
+Return(.t.)
+
+If Empty(_cConta) // Conta nใo foi informa pelo usuแrio.
+	
+	// Posiciona no cadastro de naturezas para obter a conta.
+	dbSeek(xFilial("SED") + _cNat)
+	
+	If Found() // Encontrou a natureza, obt้m as contas e valida.
+		
+		// Checa o centro de custo, pois este define qual conta serแ utilzada, faz a valida็ใo.
+		If _cRegraCC $ "AC"  .And. !Empty(SED->ED_ZZCTAD) // Administra็ใo / Comercial.
+			_cConta := SED->ED_ZZCTAD
+			TLP001A()
+		Else
+			If _cRegraCC $ "DI" .And. !Empty(SED->ED_ZZCTAC) // Produ็ใo -> Deptos.Diretos/Indiretos.
+				_cConta := SED->ED_ZZCTAC
+				TLP001A()
+				// Centro de custo nใo informado ou sem regra.
+			Else // Regra nใo conhecida.
+				If !Empty(_cRegraCC) .And. (!Empty(SED->ED_ZZCTAC) .Or. ;
+					!Empty(SED->ED_ZZCTAD) .Or. ;
+					!Empty(SED->ED_ZZCTAC))
+					TLP001B("Nใo ้ possํvel tomar decisใo porque a regra do C.Custo nใo ้ conhecida -> "+_cRegraCC)
+				ELse
+					_cConta := SED->ED_ZZCTAD
+					If !Empty(_cConta)
+						TLP001A()
+					Else
+						_cConta := SED->ED_ZZCTAC
+						If !Empty(_cConta)
+							TLP001A()
+						Else
+							_cConta := SED->ED_ZZCTAA
+							If !Empty(_cConta)
+								TLP001A()
+							else
+								_lRet := .t.
+							EndIf
+						EndIf
+					EndIf
+				EndIf
+			EndIf
+		EndIf
+	EndIf
+Else
+	// Conta foi informa pelo usuแrio, validar.
+	TLP001A()
+EndIf
+
+// Restaura แrea.
+RestArea(_xAreaSED)
+
+// Retorna no movimento bancแrio a conta contแbil encontrada e validada.
+If _lRet == .T.
+	If cRecPag == "P"
+		M->E5_DEBITO := _cConta
+	Else
+		M->E5_CREDITO := _cConta
+	EndIf
+EndIf
+
+// Retorna falso ou verdadeiro, permitindo a inclusใo do tํtulo.
+Return(_lRet)
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+ฑฑษออออออออออัออออออออออหอออออออัออออออออออออออออออออหออออออัอออออออออออออปฑฑ
+ฑฑบPrograma  ณTLP001A   บAutor  ณDonizete            บ Data ณ  23/12/05   บฑฑ
+ฑฑฬออออออออออุออออออออออสอออออออฯออออออออออออออออออออสออออออฯอออออออออออออนฑฑ
+ฑฑบDesc.     ณ Este programa valida as informa็๕es (entidades e amarra-   บฑฑ
+ฑฑบ          ณ ็๕es).                                                     บฑฑ
+ฑฑฬออออออออออุออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออนฑฑ
+ฑฑบUso       ณ F100TOK                                                    บฑฑ
+ฑฑศออออออออออฯออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออผฑฑ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿
+*/
+Static Function TLP001A
+
+Local _cCTTac := ""
+Local _cCTTob := ""
+Local _cCTDac := ""
+Local _cCTDob := ""
+Local _cCTHac := ""
+Local _cCTHob := ""
+
+dbSelectArea("CT1")
+_xAreaCT1 := GetArea()
+dbSetOrder(1)
+dbSeek(xFilial("CT1") + _cConta)
+If Found()
+	// Centro de custo.
+	_cCTTac := CT1->CT1_ACCUST
+	_cCTTOb := CT1->CT1_CCOBRG
+	// Item.
+	_cCTDac := CT1->CT1_ACITEM
+	_cCTDOb := CT1->CT1_ITOBRG
+	// Classe.
+	_cCTHac := CT1->CT1_ACCLVL
+	_cCTHob := CT1->CT1_CLOBRG
+	
+	If _cCTTac == "2" .And. !Empty(_cCC)
+		TLP001B("A conta amarrada a natureza nใo aceita centro de custo.")
+	ElseIf _cCTDac == "2" .And. !Empty(_cItem)
+		TLP001B("A conta amarrada a natureza nใo aceita item contแbil.")
+	ElseIf _cCTHac == "2" .And. !Empty(_cClasse)
+		TLP001B("A conta amarrada a natureza nใo aceita classe de valor.")
+	ElseIf _cCTTob == "1" .And. Empty(_cCC)
+		TLP001B("O centro de custo a " + Iif(cRecPag=="P","d้bito","cr้dito") + " ้ obrigat๓rio. Favor informar.")
+	ElseIf _cCTDob == "1" .And. Empty(_cItem)
+		TLP001B("O item contแbil a " + Iif(cRecPag=="P","d้bito","cr้dito") + " ้ obrigat๓rio. Favor informar.")
+	ElseIf _cCTHob == "1" .And. Empty(_cClasse)
+		TLP001B("A classe de valor a " + Iif(cRecPag=="P","d้bito","cr้dito") + " ้ obrigat๓ria. Favor informar.")
+	Else
+		If !Empty(_cConta)
+			_lRet := CtbAmarra(_cConta,_cCC,_cItem,_cClasse,.T.)
+		Else
+			_lRet := .t.
+		EndIf
+	EndIf
+	RestArea(_xAreaCT1)
+EndIF
+Return
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+ฑฑษออออออออออัออออออออออหอออออออัออออออออออออออออออออหออออออัอออออออออออออปฑฑ
+ฑฑบPrograma  ณTLP001B   บAutor  ณDonizete            บ Data ณ  23/12/05   บฑฑ
+ฑฑฬออออออออออุออออออออออสอออออออฯออออออออออออออออออออสออออออฯอออออออออออออนฑฑ
+ฑฑบDesc.     ณ Este programa apresenta mensagens de alerta e atribui falsoบฑฑ
+ฑฑบ          ณ เs variแveis nใo permitindo a inclusใo do tํtulo.          บฑฑ
+ฑฑฬออออออออออุออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออนฑฑ
+ฑฑบUso       ณ TLP001A                                                    บฑฑ
+ฑฑศออออออออออฯออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออผฑฑ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿
+*/
+Static Function TLP001B(_cMsg)
+Alert(_cMsg)
+_lRet := .F.
+_lOk := .F.
+Return

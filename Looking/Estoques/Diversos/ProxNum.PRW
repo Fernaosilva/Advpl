@@ -1,0 +1,61 @@
+#INCLUDE "rwmake.ch"
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºPrograma  ³PROXNUM   ºAutor  ³Adriano Marson      º Data ³  17/10/06   º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDesc.     ³ Funcao para trazer o proximo numero sequencial de          º±±
+±±º          ³ produtos, Ordens de producao e orcamento                   º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³                                                            º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+
+User Function ProxNum()
+
+Local cProxNum := ""
+Local cAtu:= ""
+
+// PROXIMO NUMERO DA ORDEM DE PRODUCAO - INICIO
+IF FUNNAME() == "MATA650"
+	cAtu:= ALLTRIM(M->C2_NUM)
+	dbSelectArea("SC2")
+	dbSetOrder(1)
+	Dbseek (xFilial("SC2")+ALLTRIM(cAtu))
+	if found()
+		while !EOF() .and. SUBSTR(SC2->C2_NUM,1,1) == cAtu
+			cProxNum := SC2->C2_NUM
+			dbSkip()
+		Enddo
+	Else
+		cProxNum := "000000"
+	Endif
+	cProxNum := SOMA1(substr(cProxNum,2,5))
+
+// PROXIMO NUMERO DO ORCAMENTO - INICIO
+eLSEif FUNNAME() == "MATA415"
+	cAtu:= ALLTRIM(M->CJ_ZZGRUPO)
+	dbSelectArea("SCJ")
+	dbSetOrder(6)
+	Dbseek (xFilial("SCJ")+ALLTRIM(cAtu))
+	IF FOUND()
+		while !EOF() .and.  SUBSTR(SCJ->CJ_ZZGRUPO,1,4) == CAtu
+			cProxNum := SUBSTR(SCJ->CJ_ZZPROPO,5,5)
+			dbSkip()
+		Enddo
+	Else
+		cProxNum := "00000"
+	Endif
+	cProxNum := SOMA1(cProxNum)
+	// PROXIMO NUMERO DO ORCAMENTO - FIM
+Endif
+
+
+Return (cProxNum)
+
+
+

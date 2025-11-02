@@ -1,0 +1,298 @@
+#INCLUDE "rwmake.ch"
+#include "protheus.ch"
+
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+ฑฑษออออออออออัออออออออออหอออออออัออออออออออออออออออออหออออออัอออออออออออออปฑฑ
+ฑฑบPrograma  ณNOVO2     บ Autor ณ AP6 IDE            บ Data ณ  03/03/09   บฑฑ
+ฑฑฬออออออออออุออออออออออสอออออออฯออออออออออออออออออออสออออออฯอออออออออออออนฑฑ
+ฑฑบDescricao ณ Codigo gerado pelo AP6 IDE.                                บฑฑ
+ฑฑบ          ณ                                                            บฑฑ
+ฑฑฬออออออออออุออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออนฑฑ
+ฑฑบUso       ณ AP6 IDE                                                    บฑฑ
+ฑฑศออออออออออฯออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออผฑฑ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿
+/*/
+
+User Function orca2()
+
+
+//ฺฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฟ
+//ณ Declaracao de Variaveis                                             ณ
+//ภฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤู
+
+Local cDesc1         := "Este programa tem como objetivo imprimir relatorio "
+Local cDesc2         := "de acordo com os parametros informados pelo usuario."
+Local cDesc3         := ""
+Local cPict          := ""
+Local titulo       := "ORวAMENTO"
+Local nLin         := 80
+
+Local Cabec1       := ""
+Local Cabec2       := ""
+Local imprime      := .T.
+Local aOrd := {}
+Private lEnd         := .F.
+Private lAbortPrint  := .F.
+Private CbTxt        := ""
+Private limite           := 80
+Private tamanho          := "P"
+Private nomeprog         := "ORC" // Coloque aqui o nome do programa para impressao no cabecalho
+Private nTipo            := 18
+Private aReturn          := { "Zebrado", 1, "Administracao", 2, 2, 1, "", 1}
+Private nLastKey        := 0
+Private cPerg       := "SCJ001"
+Private cbtxt      := Space(10)
+Private cbcont     := 00
+Private CONTFL     := 01
+Private m_pag      := 01
+Private wnrel      := "ORC" // Coloque aqui o nome do arquivo usado para impressao em disco
+
+Private cString := "SCJ"
+
+dbSelectArea("SCJ")
+dbSetOrder(1)
+
+
+pergunte(cPerg,.T.)
+
+//ฺฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฟ
+//ณ Monta a interface padrao com o usuario...                           ณ
+//ภฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤู
+
+wnrel := SetPrint(cString,NomeProg,cPerg,@titulo,cDesc1,cDesc2,cDesc3,.T.,aOrd,.T.,Tamanho,,.T.)
+
+If nLastKey == 27
+	Return
+Endif
+
+SetDefault(aReturn,cString)
+
+If nLastKey == 27
+   Return
+Endif
+
+nTipo := If(aReturn[4]==1,15,18)
+
+//ฺฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฟ
+//ณ Processamento. RPTSTATUS monta janela com a regua de processamento. ณ
+//ภฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤู
+
+RptStatus({|| RunReport(Cabec1,Cabec2,Titulo,nLin) },Titulo)
+Return
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+ฑฑษออออออออออัออออออออออหอออออออัออออออออออออออออออออหออออออัอออออออออออออปฑฑ
+ฑฑบFuno    ณRUNREPORT บ Autor ณ AP6 IDE            บ Data ณ  03/03/09   บฑฑ
+ฑฑฬออออออออออุออออออออออสอออออออฯออออออออออออออออออออสออออออฯอออออออออออออนฑฑ
+ฑฑบDescrio ณ Funcao auxiliar chamada pela RPTSTATUS. A funcao RPTSTATUS บฑฑ
+ฑฑบ          ณ monta a janela com a regua de processamento.               บฑฑ
+ฑฑฬออออออออออุออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออนฑฑ
+ฑฑบUso       ณ Programa principal                                         บฑฑ
+ฑฑศออออออออออฯออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออผฑฑ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿
+/*/
+
+Static Function RunReport(Cabec1,Cabec2,Titulo,nLin)
+
+Local nOrdem
+
+dbSelectArea(cString)
+dbSetOrder(6)
+
+//ฺฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฟ
+//ณ SETREGUA -> Indica quantos registros serao processados para a regua ณ
+//ภฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤู
+
+SetRegua(RecCount())
+
+dbGoTop()
+While !EOF()
+IF mv_par01 == CJ_ZZPROPO
+
+  cVende:= POSICIONE("SA3",1,xFilial("SA3")+CJ_ZZVEND,"A3_NREDUZ")
+  cEmail:= POSICIONE("SA3",1,xfilial("SA3")+CJ_ZZVEND,"A3_EMAIL")
+  cCliente:= POSICIONE("SA1",1,xFilial("SA1")+CJ_CLIENTE+CJ_LOJA,"A1_NOME")
+  cCnpj1:= SUBSTR(POSICIONE("SA1",1,xFilial("SA1")+CJ_CLIENTE,"A1_CGC"),0,2)
+  cCnpj2:= SUBSTR(POSICIONE("SA1",1,xFilial("SA1")+CJ_CLIENTE,"A1_CGC"),3,3)
+  cCnpj3:= SUBSTR(POSICIONE("SA1",1,xFilial("SA1")+CJ_CLIENTE,"A1_CGC"),6,3)
+  cCnpj4:= SUBSTR(POSICIONE("SA1",1,xFilial("SA1")+CJ_CLIENTE,"A1_CGC"),9,4)
+  cCnpj5:= SUBSTR(POSICIONE("SA1",1,xFilial("SA1")+CJ_CLIENTE,"A1_CGC"),13,2)
+  cDDD:= POSICIONE("SA1",1,xFilial("SA1")+CJ_CLIENTE,"A1_DDD")
+  cTel:= POSICIONE("SA1",1,xFilial("SA1")+CJ_CLIENTE,"A1_TEL")
+  cFax:= POSICIONE("SA1",1,xFilial("SA1")+CJ_CLIENTE,"A1_FAX")
+  cNum:= CJ_NUM
+  cEmissao:= DTOC(CJ_EMISSAO)
+  cValida:= DTOC(CJ_VALIDA)
+  cCond:= POSICIONE("SE4",1,XFILIAL("SE4")+CJ_CONDPAG,"E4_DESCRI")
+  cForn:= CJ_ZZUFOR
+  cFrete:= CJ_ZZFRETE
+  cPrazo := CJ_ZZPRAZO 
+  nTotal := 0
+  
+  
+  
+   
+   //ฺฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฟ
+   //ณ Verifica o cancelamento pelo usuario...                             ณ
+   //ภฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤู
+
+   If lAbortPrint
+      @nLin,00 PSAY "*** CANCELADO PELO OPERADOR ***"
+      Exit
+   Endif
+
+   //ฺฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฟ
+   //ณ Impressao do cabecalho do relatorio. . .                            ณ
+   //ภฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤู
+
+   If nLin > 55 // Salto de Pแgina. Neste caso o formulario tem 55 linhas...
+      Cabec(Titulo,Cabec1,Cabec2,NomeProg,Tamanho,nTipo)
+      nLin := 6
+   Endif
+
+   // Impressใo do Cabe็alho
+   @nLin,00 PSAY "                            Or็amento Nบ: " + CJ_ZZPROPO
+   nLin:=nLin+1
+   @nLin,00 PSAY "LOOKING ACESSำRIOS PARA MมQUINAS DE PAPEL LTDA.     CNPJ: 58.674.201/0001-54"
+   nLin:= nLin+2
+   @nLin,00 PSAY "Tel.:(19) 3935-8840 OPวรO:4 (VENDAS)       Fax:(19) 3935-8840 OPวรO:6 (FAX)"
+   nLin:= nLin+1
+   @nLin,00 PSAY "Vendedor:"
+   @nLin,10 PSAY cVende +" / MARIUZA"
+   nLin:= nLin+1
+   @nLin,00 PSAY "eMail:"
+   @nLin,07 PSAY cEmail
+   nLin:= nLin+1
+   @nLin,00 PSAY "eMail: mariuza@looking.com.br"
+   @nLin,00 PSAY "_______________________________________________________________________________"
+   nLin:= nLin+1
+   @nLin,00 PSAY  "Cliente"
+   @nLin,09 PSAY cCliente
+   nLin:= nLin+1
+   @nLin,00 PSAY "CNPJ:"
+   @nLin,07 PSAY cCnpj1 + "." + cCnpj2 + "." + cCnpj3 + "\" + cCnpj4 + "-" + cCnpj5   
+   nLin:= nLin+1
+   @nLin,00 PSAY "Contato:" + CJ_ZZNOMEC
+   nLin:= nLin+1
+   @nLin,00 PSAY "eMail:" + CJ_ZZEMAIL
+   nLin:= nLin+1
+   @nLin,00 PSAY "Tel.:(" + CJ_ZZDDD + ") " + CJ_ZZTELEF
+   @nLin,35 PSAY "Fax:(" + ALLTRIM(cDDD) + ") " + cFax
+   //nLin:= nLin+1
+   @nLin,00 PSAY "_______________________________________________________________________________"
+   nLin:= nLin+1
+   @nLin,00 PSAY "                               Itens do Or็amento                              "
+   //nLin:= nLin+1
+   @nLin,00 PSAY "_______________________________________________________________________________"
+   nLin:=nLin+1
+   @nLin,00 PSAY "                                                           Preco         Valor "
+   nLin:=nLin+1
+   @nLin,00 PSAY "Item Descricao                                Un    Qntde  Unitario      Total "
+   //nLin:= nLin+1
+   @nLin,00 PSAY "_______________________________________________________________________________"
+   nLin:= nLin+1
+   
+   //Impressใo dos itens do Or็amento   
+   DbSelectArea("SCK")
+   DbSetOrder(1)   
+	dbGoTop()
+	While !EOF()
+	If cNum == CK_NUM
+		
+		@nLin,01 PSAY CK_ITEM
+	   //	nLin:=nLin+1
+		//@nLin,05 PSAY CK_PRODUTO
+	    //	nLin:=nLin+1
+		@nLin,05 PSAY CK_DESCRI PICTURE "@!"
+	   //	nLin:=nLin+1
+		@nLin,46 PSAY CK_UM
+	   //	nLin:=nLin+1
+		@nLin,49 PSAY CK_QTDVEN PICTURE "@E 999.99"
+	   //	nLin:=nLin+1
+		@nLin,58 PSAY CK_PRCVEN PICTURE "@E 999,999.99"
+	    @nLin,70 PSAY CK_VALOR PICTURE "@E 999,999.99"
+	    nTotal := nTotal + CK_VALOR 
+		nLin:=nLin+1
+		
+   //	DbSkip()
+	
+	endIf
+	DbSkip()  
+    
+    EndDo
+    
+   // Coloque aqui a logica da impressao do seu programa...
+   // Utilize PSAY para saida na impressora. Por exemplo:
+   // @nLin,00 PSAY SA1->A1_COD
+   
+    
+    @52,00 PSAY "*************************************** TOTAL = "  
+    @52,49 PSAY nTotal PICTURE "@E 999,999,999.99"
+    @54,05 PSAY "CONDIวรO DE PAGAMANTO:" + cCond 
+    
+    If cPrazo == "IM"
+    
+    @56,05 PSAY "PRAZO DE ENTREGA: IMEDIATO."
+   
+    ELSEIf cPrazo != "NA" .or. cPrazo != "IM"
+     
+    @56,05 PSAY "PRAZO DE ENTREGA: " + cPrazo + " DIAS UTEIS APOS CONFIRMAวรO DO PEDIDO DE COMPRA."
+    
+    ENDIF
+
+   If cFrete=="F"
+   
+   @58,05 PSAY "FRETE: FOB"
+   
+   else
+   
+   @58,05 PSAY "FRETE: CIF"
+   
+   EndIf
+   
+   @60,05 PSAY "ICMS INCLUSO E IPI 5% EXCLUSO"
+  
+   If  cForn == "S"
+   
+   @62,00 PSAY "PREวOS MANTIDOS CONFORME ฺLTIMO FORNECIMENTO."
+   
+   EndIf
+ 
+                                                                              
+                                                                            
+  @64,00 PSAY "Emissใo:"+ cEmissao+"             Validade: "+cValida                                 
+  @64,00 PSAY "_______________________________________________________________________________"                                                                               
+  @65,00 PSAY "Aprova็ใo:                                                                               
+                                                                                 
+  @67,00 PSAY "Data: ___/___/____         Responsav้l:________________________________________"      
+  
+   EndIf
+   dbSkip() // Avanca o ponteiro do registro no arquivo
+EndDo
+
+//ฺฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฟ
+//ณ Finaliza a execucao do relatorio...                                 ณ
+//ภฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤู
+
+SET DEVICE TO SCREEN
+
+//ฺฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฟ
+//ณ Se impressao em disco, chama o gerenciador de impressao...          ณ
+//ภฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤู
+
+If aReturn[5]==1
+   dbCommitAll()
+   SET PRINTER TO
+   OurSpool(wnrel)
+Endif
+
+MS_FLUSH()
+
+Return

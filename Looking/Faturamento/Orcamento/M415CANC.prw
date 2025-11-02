@@ -1,0 +1,14 @@
+#Include "RWMAKE.CH"
+
+//criado por Fernando da silva em 05/07/2007
+
+
+User Function M415CANC()   
+
+
+
+		_lRet := MsgBox("Atenção, as alterações não serão gravadas! Deseja continuar? ","Aviso !!!","YESNO")
+		
+
+	
+	

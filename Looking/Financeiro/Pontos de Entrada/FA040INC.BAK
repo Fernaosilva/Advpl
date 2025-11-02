@@ -1,0 +1,211 @@
+#Include "PROTHEUS.CH"
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+ฑฑษออออออออออัออออออออออหอออออออัออออออออออออออออออออหออออออัอออออออออออออปฑฑ
+ฑฑบPrograma  ณFA040INC  บAutor  ณVitor Luis Fattori  บ Data ณ  24/06/05   บฑฑ
+ฑฑฬออออออออออุออออออออออสอออออออฯออออออออออออออออออออสออออออฯอออออออออออออนฑฑ
+ฑฑบDesc.     ณ Este PE valida se o centro de receita foi informado na incl.ฑฑ
+ฑฑบ          ณ manual de tํtulos a receber quando usar natureza de receita.ฑฑ
+ฑฑบ          ณ                                                            บฑฑ
+ฑฑฬออออออออออุออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออนฑฑ
+ฑฑบUso       ณ Inclusใo de tํtulos a receber.                             บฑฑ
+ฑฑศออออออออออฯออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออผฑฑ
+ฑฑบ 10/06/06 ณ Adaptado ao mesmo conceito do ponto de entrada de tํtulo   บฑฑ
+ฑฑบ          ณ a pagar. Donizete.                                         บฑฑ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿
+*/
+
+User Function FA040INC()
+
+// Declara็ใo das Variแveis.
+Public 	_cNat 	 		:= M->E1_NATUREZ
+Public   _cConta		:= M->E1_CREDIT
+Public	_cCC			:= M->E1_CCC
+Public	_cItem			:= M->E1_ITEMC
+Public	_cClasse		:= M->E1_CLVLCR
+Public 	_xAreaSED		:= {}
+Public 	_xAreaCT1		:= {}
+Public	_lRet			:= .f.
+Public  _cRegraCC		:= alltrim(u_cc(_cCC))
+
+// Nใo faz valida็ใo caso a natureza nใo esteja parametrizada para ser contabilizada.
+
+If M->E1_TIPO=="RA "
+	Return(U_VLDRA())
+EndIf
+
+// Nใo valida estes tipos de documento.
+If Alltrim(M->E1_TIPO)$"PR,NCC,RA,AB-"
+	Return(.T.)
+EndIf
+
+dbSelectArea("SED")
+_xAreaSED := GetArea()
+dbSetOrder(1)
+dbSeek(xFilial("SED") + _cNat)
+
+// S๒ valida se a natureza estiver parametrizada para ser contabilizada.
+If SED->ED_ZZCTB == "N"
+	RestArea(_xAreaSED)
+	Return(.T.)
+EndIf
+
+If SED->ED_ZZCCOBR=="S" .And. Empty(M->E2_CCC)
+	RestArea(_xAreaSED)
+	MsgAlert("ษ obrigat๓rio a digita็ใo do centro de custo!")
+	Return(.f.)
+EndIf
+
+If SED->ED_ZZCTB=="F"
+	If MsgYesNo("O uso desta natureza geralmente acompanha uma NF, a digita็ใo da mesma deve ser pelo m๓dulo " + ;
+	      "de Faturamento para o correto processamento do sistema. Continuar?","ATENCAO")
+	Else
+		RestArea(_xAreaSED)
+		Return(.f.)
+	EndIf
+EndIf
+
+// Nใo executa demais valida็๕es pois o m๓dulo de contabilidade serแ implantado na fase 2.
+Return(.t.)
+
+If Empty(_cConta) // Conta nใo foi informa pelo usuแrio.
+	
+	// Posiciona no cadastro de naturezas para obter a conta.
+	dbSeek(xFilial("SED") + _cNat)
+	
+	If Found() // Encontrou a natureza, obt้m as contas e valida.
+		
+		// Checa o centro de custo, pois este define qual conta serแ utilzada, faz a valida็ใo.
+		If _cRegraCC $ "AC"  .And. !Empty(SED->ED_ZZCTAD) // Administra็ใo / Comercial.
+			_cConta := SED->ED_ZZCTAD
+			TLP001A()
+		Else
+			If _cRegraCC $ "DI" .And. !Empty(SED->ED_ZZCTAC) // Produ็ใo -> Deptos.Diretos/Indiretos.
+				_cConta := SED->ED_ZZCTAC
+				TLP001A()
+				// Centro de custo nใo informado ou sem regra.
+			Else // Regra nใo conhecida.
+				If !Empty(_cRegraCC) .And. (!Empty(SED->ED_ZZCTAC) .Or. ;
+					!Empty(SED->ED_ZZCTAD) .Or. ;
+					!Empty(SED->ED_ZZCTAC))
+					TLP001B("Nใo ้ possํvel tomar decisใo porque a regra do C.Custo nใo ้ conhecida -> "+_cRegraCC)
+				ELse
+					_cConta := SED->ED_ZZCTAD
+					If !Empty(_cConta)
+						TLP001A()
+					Else
+						_cConta := SED->ED_ZZCTAC
+						If !Empty(_cConta)
+							TLP001A()
+						Else
+							_cConta := SED->ED_ZZCTAA
+							If !Empty(_cConta)
+								TLP001A()
+							else
+								_lRet := .t.
+							EndIf
+						EndIf
+					EndIf
+				EndIf
+			EndIf
+		EndIf
+	EndIf
+Else
+	// Conta foi informa pelo usuแrio, validar.
+	TLP001A()
+EndIf
+
+// Restaura แrea.
+RestArea(_xAreaSED)
+
+// Retorna no tํtulo a conta contแbil encontrada e validada.
+If _lRet == .T.
+	M->E1_CREDIT:= _cConta
+EndIf
+
+// Retorna falso ou verdadeiro, permitindo a inclusใo do tํtulo.
+Return(_lRet)
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+ฑฑษออออออออออัออออออออออหอออออออัออออออออออออออออออออหออออออัอออออออออออออปฑฑ
+ฑฑบPrograma  ณTLP001A   บAutor  ณDonizete            บ Data ณ  23/12/05   บฑฑ
+ฑฑฬออออออออออุออออออออออสอออออออฯออออออออออออออออออออสออออออฯอออออออออออออนฑฑ
+ฑฑบDesc.     ณ Este programa valida as informa็๕es (entidades e amarra-   บฑฑ
+ฑฑบ          ณ ็๕es).                                                     บฑฑ
+ฑฑฬออออออออออุออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออนฑฑ
+ฑฑบUso       ณ FA050INC                                                   บฑฑ
+ฑฑศออออออออออฯออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออผฑฑ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿
+*/
+Static Function TLP001A
+
+Local _cCTTac := ""
+Local _cCTTob := ""
+Local _cCTDac := ""
+Local _cCTDob := ""
+Local _cCTHac := ""
+Local _cCTHob := ""
+
+dbSelectArea("CT1")
+_xAreaCT1 := GetArea()
+dbSetOrder(1)
+dbSeek(xFilial("CT1") + _cConta)
+If Found()
+	// Centro de custo.
+	_cCTTac := CT1->CT1_ACCUST
+	_cCTTOb := CT1->CT1_CCOBRG
+	// Item.
+	_cCTDac := CT1->CT1_ACITEM
+	_cCTDOb := CT1->CT1_ITOBRG
+	// Classe.
+	_cCTHac := CT1->CT1_ACCLVL
+	_cCTHob := CT1->CT1_CLOBRG
+	
+	If _cCTTac == "2" .And. !Empty(_cCC)
+		TLP001B("A conta amarrada a natureza nใo aceita centro de custo.")
+	ElseIf _cCTDac == "2" .And. !Empty(_cItem)
+		TLP001B("A conta amarrada a natureza nใo aceita item contแbil.")
+	ElseIf _cCTHac == "2" .And. !Empty(_cClasse)
+		TLP001B("A conta amarrada a natureza nใo aceita classe de valor.")
+	ElseIf _cCTTob == "1" .And. Empty(_cCC)
+		TLP001B("O centro de custo ้ obrigat๓rio. Favor informar.")
+	ElseIf _cCTDob == "1" .And. Empty(_cItem)
+		TLP001B("O item contแbil ้ obrigat๓rio. Favor informar.")
+	ElseIf _cCTHob == "1" .And. Empty(_cClasse)
+		TLP001B("A classe de valor ้ obrigat๓ria. Favor informar.")
+	Else
+		If !Empty(_cConta)
+			_lRet := CtbAmarra(_cConta,_cCC,_cItem,_cClasse,.T.)
+		Else
+			_lRet := .t.
+		EndIf
+	EndIf
+EndIf
+RestArea(_xAreaCT1)
+Return
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+ฑฑษออออออออออัออออออออออหอออออออัออออออออออออออออออออหออออออัอออออออออออออปฑฑ
+ฑฑบPrograma  ณTLP001B   บAutor  ณDonizete            บ Data ณ  23/12/05   บฑฑ
+ฑฑฬออออออออออุออออออออออสอออออออฯออออออออออออออออออออสออออออฯอออออออออออออนฑฑ
+ฑฑบDesc.     ณ Este programa apresenta mensagens de alerta e atribui falsoบฑฑ
+ฑฑบ          ณ เs variแveis nใo permitindo a inclusใo do tํtulo.          บฑฑ
+ฑฑฬออออออออออุออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออนฑฑ
+ฑฑบUso       ณ TLP001A                                                    บฑฑ
+ฑฑศออออออออออฯออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออผฑฑ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿
+*/
+Static Function TLP001B(_cMsg)
+Alert(_cMsg)
+_lRet := .F.
+_lOk := .F.
+Return

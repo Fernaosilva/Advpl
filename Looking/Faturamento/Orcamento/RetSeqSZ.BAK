@@ -1,0 +1,34 @@
+#INCLUDE "PROTHEUS.CH"
+#INCLUDE "TOPCONN.CH"
+
+User Function RetSeqSZ
+
+// Variáveis da função.
+Local _nCod := 0 
+Local _cCod := ""
+Local _xArea:= GetArea()
+
+// Conta quantas vezes já foi usado o número.
+cQuery := "SELECT COUNT(Z0_NUM) AS NUMSEQ FROM " + RetSqlName("SZ0")
+cQuery += " WHERE Z0_NUM='"+M->Z0_NUM+"' AND"
+cQuery += " D_E_L_E_T_=' '"
+TcQuery cQuery New Alias "TSZ0"
+TSZ0->(dbGoTop())
+
+If TSZ0->NUMSEQ == 0 // Não achou nenhuma vez.
+	_nCod := 1
+Else // Achou
+	_nCod := TSZ0->NUMSEQ + 1
+EndIf
+
+// Fecha tab.temporário.
+TSZ0->(dbCloseArea())
+
+// Monta o próximo código.
+_cCod := StrZero(_nCod,2)
+
+// Restaura área
+RestArea(_xArea)
+
+// Fim do programa.
+Return(_cCod)
