@@ -1,0 +1,304 @@
+#INCLUDE "MNTA135.CH"
+#INCLUDE "PROTHEUS.CH"
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³MNTA135   ³ Autor ³ Inacio Luiz Kolling   ³ Data ³ 15/10/98 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Gera o cadastro de Manutencao ( STF...) a partir da manu-  ³±±
+±±³          ³ tencoes Padrao ( TPF,TP5,TPG,TPH,TPM ).                    ³±±
+±±³          ³                                                            ³±±
+±±³          ³ OBSERVA€ÇO :                                               ³±±
+±±³          ³                                                            ³±±
+±±³          ³ Antes de executar este programa ‚ recomend vel que se faz  ³±±
+±±³          ³ uma copia de seguran‡a dos arquivos: STF, ST5, STG , STH e ³±±
+±±³          ³ STM e verificar nos arquivos : TPF,TP5,TPG,TPH e TPM ), se ³±±
+±±³          ³ existem os dados padräes necess rios para gerar as manuten-³±±
+±±³          ³ ‡äes.                                                      ³±±
+±±³          ³                                                            ³±±
+±±³          ³ Caso ocorra algum erro durante a geracao, limpe ou delete  ³±±
+±±³          ³ os arquivos STF....*, ST5....*, STG....*, STH....* e       ³±±
+±±³          ³ STM...*.  Corriga o erro, compila com o RDMAKE com o para- ³±±
+±±³          ³ metro -X, restaure a copia de seguran‡a e execute novamente³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³Implantacao do MANUTENCAO INDUSTRIAL ( SIGAMNT ).           ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Function MNTA135()  
+Private aPOS1,cSAVEMENUH,cREC,cSEQUENC,cSERVICO,NSEQUENC
+
+nOpcon := 1
+cFamilia1 := space(06)
+cFamilia2 := space(06)
+
+DEFINE MSDIALOG oDlg1 TITLE OemToAnsi(STR0003)from 15,30 To 25,70 of oMainwnd  //"Gera Manutencao Preventiva apartir do Padrao"
+   
+   @ 3.0,2  SAY OemToAnsi(STR0001)  //"De Familia Padrao ? "
+   @ 3.0,9  MSGET cFamilia1 Picture "@!" SIZE 30,07 F3 "ST6" VALID naovazio() .and. famid09(cFamilia1)
+   @ 4.0,2  SAY OemtoAnsi(STR0002)  //"Ate Familia Padrao ?"
+   @ 4.0,9  MSget cFamilia2  Picture "@!" SIZE 30,07 F3 "ST6" VALID naovazio() .and. famid09(cFamilia1)
+   
+   
+ACTIVATE MSDIALOG oDlg1 ON INIT EnchoiceBar(oDlg1,{||opcon:=1,oDlg1:End()},{||oDlg1:End()})
+
+aPos1 := {15,1,78,315}
+
+if nOpcon == 1
+   Processa({|lEnd| PSTFPROC()})   
+endif
+
+Return
+
+/*                                                                                   
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³PSTFPROC  ³ Autor ³ Inacio Luiz Kolling   ³ Data ³          ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³Processa o TPF                                              ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³                                                            ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+
+Function PSTFPROC()
+
+nREC   := 0
+
+dbSelectArea("ST9")
+Dbsetorder(4)
+Dbseek(xfilial("ST9")+cFamilia1)
+DbEval({|| nREC := nREC + 1},,{||ST9->T9_CODFAMI == cFamilia1})
+
+ProcRegua(nREC)
+
+dbSelectArea("ST9")
+Dbsetorder(4)
+
+if Dbseek(xfilial("ST9")+ cFamilia1)
+
+    while !eof() .and. xfilial() == st9->t9_filial .and.; 
+                  st9->t9_codfami >= cFamilia1       .and.; 
+                  st9->t9_codfami <= cFamilia2
+                         
+                  
+      IncProc()
+      
+      dbSelectArea("TPF")
+      Dbsetorder(1)
+      if Dbseek(xfilial("TPF")+ST9->T9_CODFAMI)
+
+          // GERA O ARQUIVO DE MANUTENCAO ( STF... )
+
+          while !eof() .and. st9->t9_filial == tpf->tpf_filial;
+                       .and. st9->t9_codfami == tpf->tpf_codfam 
+
+             IF NgVerify("TPF")
+	            cSEQUENC := tpf->tpf_seqrel
+	         ELSE 
+	            NSEQUENC := tpf->tpf_sequen
+	         ENDIF    
+             cSERVICO := tpf->tpf_servic
+
+             while !eof() .and. st9->t9_filial == tpf->tpf_filial;
+                          .and. st9->t9_codfami == tpf->tpf_codfam;
+                          .and. tpf->tpf_servic == cservico;
+                          .and. IIF(NgVerify("TPF"),tpf->tpf_seqrel == csequenc,tpg->tpg_sequen == nsequenc) 
+
+                                   
+                dbSelectArea("STF")
+                Dbsetorder(1)
+                if (NgVerify("TPF") .AND. !Dbseek(xfilial("STF")+ST9->T9_CODBEM+TPF->TPF_SERVIC+TPF->TPF_SEQREL)) .OR. ;
+                   (!NgVerify("TPF") .AND. !Dbseek(xfilial("STF")+ST9->T9_CODBEM+TPF->TPF_SERVIC+STR(TPF->TPF_SEQUEN,3)))
+                   
+                  if st9->t9_sitbem == "A" .and. st9->t9_sitman == "A"
+                     RecLock('STF',.T.)
+                     STF->TF_FILIAL  := xfilial('STF')
+                     STF->TF_CODBEM  := ST9->T9_CODBEM
+                     STF->TF_SERVICO := TPF->TPF_SERVIC   
+                     IF NgVerify("STF")  .AND. NgVerify("TPF") 
+	                    STF->TF_SEQRELA := TPF->TPF_SEQREL
+	                 ELSE 
+  	                 	STF->TF_SEQUENC := TPF->TPF_SEQUEN 
+  	                 	STF->TF_SEQRELA := Alltrim(Str(TPF->TPF_SEQUEN,3))
+	                 ENDIF    
+                     STF->TF_DTULTMA := dDataBase
+                     STF->TF_NOMEMAN := TPF->TPF_NOMEMA
+                     STF->TF_PADRAO  := "S"
+                     STF->TF_CODAREA := TPF->TPF_CODARE
+                     STF->TF_TIPO    := TPF->TPF_TIPO
+                     STF->TF_CALENDA := TPF->TPF_CALEND
+                     STF->TF_TIPACOM := TPF->TPF_TIPACO
+                     STF->TF_DESCRIC := TPF->TPF_DESCRI
+                     STF->TF_PARADA  := TPF->TPF_PARADA
+                     STF->TF_TEPAANT := TPF->TPF_TEPAAN
+                     STF->TF_UNPAANT := TPF->TPF_UNPAAN
+                     STF->TF_TEPADEP := TPF->TPF_TEPADE
+                     STF->TF_UNPADEP := TPF->TPF_UNPADE
+//                      STF->TF_PERACOM := TPF->TPF_PERACO
+//                      STF->TF_UNIACOM := TPF->TPF_UNIACO
+                     STF->TF_TEENMAN := TPF->TPF_TEENMA
+                     STF->TF_UNENMAN := TPF->TPF_UNENMA
+                     STF->TF_INENMAN := TPF->TPF_INENMA
+                     STF->TF_NAOUTIL := TPF->TPF_NAOUTI
+                     STF->TF_PRIORID := TPF->TPF_PRIORI
+                     STF->TF_PERIODO := TPF->TPF_PERIOD
+                     MSUNLOCK()
+
+                     // GERA O ARQUIVO DE DATALHE DA MANUTENCAO ( STG... )
+
+                     dbSelectArea("TPG")
+                     Dbsetorder(1)
+                     if (NgVerify("TPG").AND. Dbseek(xfilial("TPG")+TPF->TPF_CODFAM+cSERVICO+cSEQUENC)) .OR. ;
+                        (!NgVerify("TPG") .AND. Dbseek(xfilial("TPG")+TPF->TPF_CODFAM+CSERVICO+STR(NSEQUENC,3)))                    
+
+                        while !eof() .and. tpg->tpg_filial == tpf->tpf_filial;
+                                   .and. tpg->tpg_codfam == tpf->tpf_codfam;
+                                   .and. tpg->tpg_servic == cservico;
+                                   .and. IIF(NgVerify("TPG"),tpg->tpg_seqrel == csequenc,tpg->tpg_sequen == nsequenc)
+                         
+                            dbSelectArea("STG")
+                            RecLock('STG',.T.)
+                            STG->TG_FILIAL  :=  xFilial()
+                            STG->TG_CODBEM  :=  ST9->T9_CODBEM
+                            STG->TG_SERVICO :=  TPG->TPG_SERVIC 
+                            IF NgVerify("STG").and. NgVerify("TPG") 
+	                           STG->TG_SEQRELA :=  TPG->TPG_SEQREL
+	                        ELSE
+	                           STG->TG_SEQUENC :=  TPG->TPG_SEQUEN   
+	                           STG->TG_SEQRELA :=  Alltrim(Str(TPG->TPG_SEQUEN,3))
+	                        ENDIF
+                            STG->TG_TAREFA  :=  TPG->TPG_TAREFA
+                            STG->TG_TIPOREG :=  TPG->TPG_TIPORE
+                            STG->TG_CODIGO  :=  TPG->TPG_CODIGO
+                            STG->TG_QUANREC :=  TPG->TPG_QUANRE
+                            STG->TG_QUANTID :=  TPG->TPG_QUANTI
+                            STG->TG_UNIDADE :=  TPG->TPG_UNIDAD
+                            STG->TG_RESERVA :=  TPG->TPG_RESERV
+                            STG->TG_DESTINO :=  TPG->TPG_DESTIN 
+                            MSUNLOCK()
+                            
+                            dbSelectArea('TPG')
+                            dbskip()
+                        end
+
+                     endif
+
+                     // GERA O ARQUIVO DAS TAREFAS DA MANUTENCAO ( ST5... )
+
+                     dbSelectArea("TP5")
+                     Dbsetorder(1)
+                     if (NgVerify("TP5") .and. Dbseek(xfilial("TP5")+TPF->TPF_CODFAM+cSERVICO+cSEQUENC)) .or. ;
+                        (!NgVerify("TP5") .and. Dbseek(xfilial("TP5")+TPF->TPF_CODFAM+CSERVICO+STR(NSEQUENC,3)))
+
+                        while !eof() .and. tp5->tp5_filial == tpf->tpf_filial;
+                                      .and. tp5->tp5_codfam == tpf->tpf_codfam;
+                                      .and. tp5->tp5_servic == cservico;
+                                      .and. iif(NgVerify("TP5"),tp5->tp5_seqrel == csequenc,tp5->tp5_sequen == nsequenc)
+
+                            dbSelectArea('ST5')
+                            RecLock('ST5',.T.)
+                            ST5->T5_FILIAL  := xfilial('TP5')
+                            ST5->T5_CODBEM  := ST9->T9_CODBEM
+                            ST5->T5_SERVICO := TP5->TP5_SERVIC
+                            if NgVerify("ST5") .and. NgVerify("TP5")
+	                           ST5->T5_SEQRELA := TP5->TP5_SEQREL  
+    						else                        
+	                           ST5->T5_SEQUENC := TP5->TP5_SEQUEN
+	                           ST5->T5_SEQRELA := Alltrim(Str(TP5->TP5_SEQUEN,3))
+	                        endif    
+                            ST5->T5_TAREFA  := TP5->TP5_TAREFA
+                            ST5->T5_DESCRIC := TP5->TP5_DESCRI
+                            MSUNLOCK()
+
+                            dbSelectArea('TP5')
+                            dbskip()
+                        end
+
+                     endif
+                    
+                     // GERA O ARQUIVO DAS DEPENDENCIAS DAS TAREFAS DA MANUTENCAO ( STM... )
+
+                     dbSelectArea("TPM")
+                     Dbsetorder(1)
+                     if (NgVerify("TPM") .AND. Dbseek(xfilial("TPM")+TPF->TPF_CODFAM+cSERVICO+cSEQUENC)) .OR. ;
+                        (!NgVerify("TPM") .AND. Dbseek(xfilial("TPM")+TPF->TPF_CODFAM+CSERVICO+STR(NSEQUENC,3)))
+
+                        while !eof() .and. tpm->tpm_filial == tpf->tpf_filial;
+                                     .and. tpm->tpm_codfam == tpf->tpf_codfam;
+                                     .and. tpm->tpm_servic == cservico;
+                                     .and. IIF(NgVerify("TPM"),tpm->tpm_seqrel == csequenc,tpm->tpm_sequen == nsequenc)
+
+
+                           RecLock('STM',.T.)
+                           STM->TM_FILIAL  :=  xFilial()
+                           STM->TM_CODBEM  :=  ST9->T9_CODBEM
+                           STM->TM_SERVICO :=  TPM->TPM_SERVIC  
+                           IF NgVerify("STM") .AND. NgVerify("TPM")
+	                          STM->TM_SEQRELA := TPM->TPM_SEQREL
+	                       ELSE 
+	                       	  STM->TM_SEQUENC := TPM->TPM_SEQUEN
+	                       	  STM->TM_SEQRELA := Alltrim(Str(TPM->TPM_SEQUEN,3)) 
+	                       ENDIF    
+                           STM->TM_TAREFA  :=  TPM->TPM_TAREFA
+                           STM->TM_DEPENDE :=  TPM->TPM_DEPEND
+                           STM->TM_SOBREPO :=  TPM->TPM_SOBREP
+                           MSUNLOCK()
+
+                           dbSelectArea('TPM')
+                           dbskip()
+                        end
+
+                     endif
+
+                     // GERA O ARQUIVO DAS ETAPAS DAS TAREFAS DA MANUTENCAO ( STH... )
+
+                     dbSelectArea("TPH")
+                     Dbsetorder(1)
+                     if (NgVerify("TPH") .AND. Dbseek(xfilial("TPH")+TPF->TPF_CODFAM+cSERVICO+cSEQUENC)) .OR. ;
+                        (!NgVerify("TPH") .AND.Dbseek(xfilial("TPH")+TPF->TPF_CODFAM+CSERVICO+STR(NSEQUENC,3)))
+
+                        while !eof() .and. tph->tph_filial == tpf->tpf_filial;
+                                     .and. tph->tph_codfam == tpf->tpf_codfam;
+                                     .and. tph->tph_servic == cservico .and.;
+                                     IIF(NgVerify("TPH"),tph->tph_seqrel == csequenc,tph->tph_sequen == nsequenc)
+                                     
+                                RecLock('STH',.T.)
+                                STH->TH_FILIAL  :=  xFilial()
+                                STH->TH_CODBEM  :=  ST9->T9_CODBEM
+                                STH->TH_SERVICO :=  TPH->TPH_SERVIC  
+                                IF NgVerify("STH") .AND. NgVerify("TPH")
+	                               STH->TH_SEQRELA := TPH->TPH_SEQREL
+	                            ELSE 
+	                               STH->TH_SEQUENC := TPH->TPH_SEQUEN
+	                               STH->TH_SEQRELA := Alltrim(Str(TPH->TPH_SEQUEN,3))
+	                            ENDIF    
+                                STH->TH_TAREFA  :=  TPH->TPH_TAREFA
+                                STH->TH_ETAPA   :=  TPH->TPH_ETAPA
+                                MSUNLOCK()
+
+                                dbSelectArea('TPH')
+                                dbSkip()
+                        end
+                     endif
+                  endif  
+                endif
+                dbSelectArea('TPF')
+                dbskip()
+             end
+          end
+
+      endif
+      dbSelectArea('ST9')
+      dbskip()
+    end
+
+endif
+dbSelectArea('ST9')
+Dbsetorder(1)
+return .t.
